@@ -84,3 +84,4 @@ curl -X POST http://localhost:8888/api/delete \
 ***
 ### blog
 
+https://zenn.dev/knaka0209/scraps/1207b690613e07
