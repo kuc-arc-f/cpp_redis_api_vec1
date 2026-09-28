@@ -50,6 +50,7 @@ make all
 ```
 
 ***
+### Test- code
 * vector add
 * content: text
 * vector: vector data
@@ -61,7 +62,6 @@ curl -X POST http://localhost:8888/api/insert \
 ```
 
 ***
-### Test- code
 * vector select
 * limit: max record
 * vector: vector data
