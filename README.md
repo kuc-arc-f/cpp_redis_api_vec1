@@ -21,7 +21,7 @@ C++ Redis Api Server , Vector add search
 
 * http client , RAG app
 
-https://github.com/kuc-arc-f/cpp_16ex/tree/main/redis_cl_1
+https://github.com/kuc-arc-f/cpp_16ex/tree/main/redis_cl_2
 
 ***
 ### related
