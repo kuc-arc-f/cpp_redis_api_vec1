@@ -18,7 +18,6 @@
 #include "include/DocumetDb.hpp"
 using json = nlohmann::json;
 
-std::string PREFIX_KEY = "doc:";
 std::string LOG_FILE_WRITE = "0";
 
 static int               g_next_id = 1;
@@ -49,21 +48,29 @@ int main() {
         try{
             // 2. JSONデコード (req.body をパース)
             json j = json::parse(req.body);
+            std::cout << "prefix=" << req.body << "\n";
 
             // 3. データの取り出し (例: {"name": "Gopher", "id": 123})
+            std::string prefix = j.at("prefix").get<std::string>();
+            std::cout << "prefix=" << prefix << "\n";
             std::string content = j.at("content").get<std::string>();
             std::cout << "content=" << content << "\n";
             std::string vector = j.at("vector").get<std::string>();
             std::cout << "vector=" << vector << "\n";
+            if( prefix.empty()){
+                res.status = 400;
+                res.set_content("error, prefix none", "application/json");
+                return;
+            }            
             DocumetDb dLib("");
             //validate
-            bool ok = dLib.get_one_list(PREFIX_KEY, vector);
+            bool ok = dLib.get_one_list(prefix, vector);
             if( ok == false){
                 res.status = 400;
                 res.set_content("error, vec length NG", "application/json");
                 return;
             }
-            dLib.vector_add(PREFIX_KEY, content, vector);
+            dLib.vector_add(prefix, content, vector);
 
             NormalRespopnse re1;
             re1.ret_code = 200;
@@ -93,20 +100,22 @@ int main() {
             // 2. JSONデコード (req.body をパース)
             json j = json::parse(req.body);
             // 3. データの取り出し (例: {"name": "Gopher", "id": 123})
+            std::string prefix = j.at("prefix").get<std::string>();
+            std::cout << "prefix=" << prefix << "\n";
             std::string vector = j.at("vector").get<std::string>();
             std::cout << "vector=" << vector << "\n";
             int limit = j["limit"].get<int>();
             std::cout << "limit=" << limit << "\n";
             //validate
             DocumetDb dLib("");
-            bool ok = dLib.get_one_list(PREFIX_KEY, vector);
+            bool ok = dLib.get_one_list(prefix, vector);
             if( ok == false){
                 res.status = 400;
                 res.set_content("error, vec length NG", "application/json");
                 return;
             }
             // SCAN 実行
-            auto resp =  dLib.getTableList(PREFIX_KEY, vector, limit);
+            auto resp =  dLib.getTableList(prefix, vector, limit);
             dLib.free_ctx();
 
             SearchListResp re1;
@@ -139,11 +148,13 @@ int main() {
             json j = json::parse(req.body);
 
             // 3. データの取り出し (例: {"name": "Gopher", "id": 123})
+            std::string prefix = j.at("prefix").get<std::string>();
+            std::cout << "prefix=" << prefix << "\n";            
             std::string id = j.at("id").get<std::string>();
             std::cout << "id=" << id << "\n";
 
             DocumetDb dLib("");
-            dLib.vector_delete(PREFIX_KEY, id);
+            dLib.vector_delete(prefix, id);
 
             NormalRespopnse re1;
             re1.ret_code = 200;
