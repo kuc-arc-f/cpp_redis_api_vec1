@@ -2,6 +2,8 @@
 #include <string>
 #include <hiredis/hiredis.h>
 
+long MAX_SCAN_COUNT = 1000000;
+
 int main(int argc, char* argv[])
 {
     if(argc < 2) {
@@ -41,9 +43,10 @@ int main(int argc, char* argv[])
         redisReply* reply = static_cast<redisReply*>(
             redisCommand(
                 redis,
-                "SCAN %s MATCH %s COUNT 100",
+                "SCAN %s MATCH %s COUNT %ld",
                 cursor.c_str(),
-                pre_pattern.c_str()
+                pre_pattern.c_str(),
+                MAX_SCAN_COUNT
             )
         );
  
