@@ -52,32 +52,36 @@ make all
 ***
 ### Test- code
 * vector add
+* prefix: prefix data type
 * content: text
 * vector: vector data
 
 ```
 curl -X POST http://localhost:8888/api/insert \
   -H "Content-Type: application/json" \
-  -d '{"content": "hello", "vector": "[0.01 , 0.03, 0.04]"}'
+  -d '{"prefix": "doc:" , "content": "hello", "vector": "[0.01 , 0.03, 0.04]"}'
 ```
 
 ***
 * vector select
+* prefix: prefix data type
 * limit: max record
 * vector: vector data
+
 ```
 curl -X POST http://localhost:8888/api/select \
   -H "Content-Type: application/json" \
-  -d '{"limit": 3 ,"vector": "[0.02 , 0.03, 0.14]"}'
+  -d '{"prefix": "doc:" , "limit": 3 ,"vector": "[0.02 , 0.03, 0.14]"}'
 ```
 
 * vector delete
+* prefix: prefix data type
 * id: id value
 
 ```
 curl -X POST http://localhost:8888/api/delete \
   -H "Content-Type: application/json" \
-  -d '{"id": "99d473b7-4f06-4a6d-b9e6-e35821e71df2"}'
+  -d '{"prefix": "doc:" ,"id": "99d473b7-4f06-4a6d-b9e6-e35821e71df2"}'
 
 ```
 
