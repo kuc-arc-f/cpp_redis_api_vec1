@@ -107,6 +107,11 @@ int main() {
             int limit = j["limit"].get<int>();
             std::cout << "limit=" << limit << "\n";
             //validate
+            if( prefix.empty()){
+                res.status = 400;
+                res.set_content("error, prefix none", "application/json");
+                return;
+            }               
             DocumetDb dLib("");
             bool ok = dLib.get_one_list(prefix, vector);
             if( ok == false){
@@ -152,7 +157,11 @@ int main() {
             std::cout << "prefix=" << prefix << "\n";            
             std::string id = j.at("id").get<std::string>();
             std::cout << "id=" << id << "\n";
-
+            if( prefix.empty()){
+                res.status = 400;
+                res.set_content("error, prefix none", "application/json");
+                return;
+            } 
             DocumetDb dLib("");
             dLib.vector_delete(prefix, id);
 
