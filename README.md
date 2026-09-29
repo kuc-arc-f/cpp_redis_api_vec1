@@ -86,6 +86,18 @@ curl -X POST http://localhost:8888/api/delete \
 ```
 
 ***
+* delete , prefix data type
+* build
+```
+g++ -std=c++17 delete_doc.cpp -o delete_doc -lhiredis
+```
+
+* delete [PREFIX]
+```
+./delete_doc doc1:
+```
+
+***
 ### blog
 
 https://zenn.dev/knaka0209/scraps/1207b690613e07
