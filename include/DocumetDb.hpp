@@ -102,13 +102,13 @@ public:
                   continue;
               }
 
-              std::cout << "KEY   : " << key << std::endl;
+              //std::cout << "KEY   : " << key << std::endl;
 
               if (valueReply->type == REDIS_REPLY_STRING)
               {
-                  std::cout << "VALUE : "
-                            << valueReply->str
-                            << std::endl;
+                  //std::cout << "VALUE : "
+                  //          << valueReply->str
+                  //          << std::endl;
                   std::string j1_str = valueReply->str;
                   json j1 = json::parse(j1_str);
                   std::string content = j1.at("content").get<std::string>();                  
@@ -132,8 +132,8 @@ public:
                             << std::endl;
               }
 
-              std::cout << "----------------------"
-                        << std::endl;
+              //std::cout << "----------------------"
+              //          << std::endl;
 
               freeReplyObject(valueReply);
           }
@@ -226,7 +226,7 @@ public:
                 int vlength = sizeof(vec) / sizeof(vec[0]);
 
                 float distance = cosine_similarity(embedding, vec);
-                std::cout << "distance=" << distance << std::endl;            
+                //std::cout << "distance=" << distance << std::endl;            
                 ResultEmbed res_item;
                 res_item.id = id;
                 res_item.embedding = vec;
@@ -258,7 +258,7 @@ public:
             }
             json j2 = out_items;
             std::string json_str = j2.dump();
-            std::cout << json_str << std::endl;            
+            //std::cout << json_str << std::endl;            
             ret = json_str;
             return ret;
         } catch (const std::exception &e) {

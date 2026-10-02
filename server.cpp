@@ -103,7 +103,7 @@ int main() {
             std::string prefix = j.at("prefix").get<std::string>();
             std::cout << "prefix=" << prefix << "\n";
             std::string vector = j.at("vector").get<std::string>();
-            std::cout << "vector=" << vector << "\n";
+            //std::cout << "vector=" << vector << "\n";
             int limit = j["limit"].get<int>();
             std::cout << "limit=" << limit << "\n";
             //validate
@@ -128,7 +128,7 @@ int main() {
             re1.data = resp;
             json j1 = re1;
             std::string json_str = j1.dump();
-            std::cout << json_str << std::endl;            
+            //std::cout << json_str << std::endl;            
 
             res.status = 200;
             res.set_content(json_str, "application/json");
