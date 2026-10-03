@@ -1,4 +1,5 @@
 #include "httplib.h"
+#include <chrono>
 #include <iostream>
 #include <cstring>
 #include <future>
@@ -62,9 +63,10 @@ int main() {
                 res.set_content("error, prefix none", "application/json");
                 return;
             }            
-            DocumetDb dLib("");
             //validate
-            bool ok = dLib.get_one_list(prefix, vector);
+            DocumetDb dLib("");
+            auto items = dLib.get_scan_items(prefix, 10);
+            bool ok = dLib.valid_vector_len(items, vector);            
             if( ok == false){
                 res.status = 400;
                 res.set_content("error, vec length NG", "application/json");
@@ -95,7 +97,9 @@ int main() {
             res.status = 400;
             res.set_content("Expected application/json", "text/plain");
             return;
-        }        
+        }
+        // 開始時刻
+        auto start = std::chrono::high_resolution_clock::now();                
         try{
             // 2. JSONデコード (req.body をパース)
             json j = json::parse(req.body);
@@ -113,22 +117,26 @@ int main() {
                 return;
             }               
             DocumetDb dLib("");
-            bool ok = dLib.get_one_list(prefix, vector);
+            auto items = dLib.get_scan_items(prefix, 10);
+            bool ok = dLib.valid_vector_len(items, vector);
             if( ok == false){
                 res.status = 400;
                 res.set_content("error, vec length NG", "application/json");
                 return;
             }
-            // SCAN 実行
-            auto resp =  dLib.getTableList(prefix, vector, limit);
+            auto resp =  dLib.getTableList(items, vector, limit);
             dLib.free_ctx();
-
+            //std::cout << json_str << std::endl;            
             SearchListResp re1;
             re1.ret_code = 200;
             re1.data = resp;
             json j1 = re1;
             std::string json_str = j1.dump();
-            //std::cout << json_str << std::endl;            
+
+            auto end = std::chrono::high_resolution_clock::now();
+            // 差分（ミリ秒）
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+            std::cout << "time_end: " << duration.count() << " ms" << std::endl;        
 
             res.status = 200;
             res.set_content(json_str, "application/json");

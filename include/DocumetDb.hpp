@@ -47,15 +47,12 @@ public:
 
       do
       {
-          EmbedData row;
-          //"SCAN %llu MATCH %s COUNT %d", %ld
           redisReply* reply = static_cast<redisReply*>(
               redisCommand(
                   ctx,
-                  "SCAN %s MATCH %s COUNT %ld",
+                  "SCAN %s MATCH %s COUNT 100",
                   cursor.c_str(),
-                  match_str.c_str() ,
-                  max_count
+                  match_str.c_str()
               )
           );
 
@@ -115,9 +112,17 @@ public:
                   std::string id = j1.at("id").get<std::string>();                  
                   std::string vector = j1.at("vector").get<std::string>();                  
                   json j2 = json::parse(vector);
-                  auto vec = j2;
-                  //int vlength = sizeof(vec) / sizeof(vec[0]);
-                  row.embedding    = vec.get<std::vector<float>>();                  
+                  //std::cout << "j2.size=" << j2.size() << std::endl;
+                  /*
+                  std::vector<float> vecFloat;
+                  for(int i=0; i < j2.size(); i++) {
+                    auto f1 = j2[i].get<float>();
+                    vecFloat.push_back(f1);
+                  }            
+                  */
+                  std::vector<float> rowVec;
+                  EmbedData row;      
+                  row.embedding    = j2.get<std::vector<float>>();                  
                   row.id = id;
                   row.content = content;
                   scanItems.push_back(row);
@@ -166,6 +171,36 @@ public:
         return dot / (std::sqrt(norm1Sq) * std::sqrt(norm2Sq));
     }    
 
+    bool valid_vector_len(std::vector<EmbedData> items, std::string vec_str) {
+        bool ret = false;
+        try {
+            json j1 = json::parse(vec_str);
+            std::cout << "size: " << j1.size() << '\n';
+            auto embedding = j1;
+            //int vlen = sizeof(embedding) / sizeof(embedding[0]);
+            std::cout << "embedding.vlen=" << embedding.size() << std::endl;            
+            //auto items = get_scan_items(prefix, 5);
+            std::cout << "items.size=" << items.size() << std::endl;
+            if(items.size() == 0){
+                return true;
+            }
+            int one_vec_size = 0;
+            auto target = items[0];
+            one_vec_size = target.embedding.size();
+            std::cout << "one_vec_size=" << one_vec_size << std::endl;
+
+            if(embedding.size() != one_vec_size){
+                std::cout << "error, embedding.size NG" << std::endl;
+                return ret;
+            }
+            return true;
+        } catch (const std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            return ret;
+        }
+        return ret;
+    }
+
     bool get_one_list(std::string prefix, std::string vec_str) {
         bool ret = false;
         try {
@@ -180,8 +215,12 @@ public:
                 return true;
             }
 
-            std::vector<ResultEmbed> result_items;
+            //std::vector<ResultEmbed> result_items;
             int one_vec_size = 0;
+            auto target = items[0];
+            one_vec_size = target.embedding.size();
+            std::cout << "one_vec_size=" << one_vec_size << std::endl;
+            /*
             for (const auto& data : items) {
                 std::string id = data.id;
                 std::vector<float> vec = data.embedding;
@@ -196,6 +235,7 @@ public:
                     result_items.push_back(res_item); 
                 }
             }
+            */
             if(embedding.size() != one_vec_size){
                 std::cout << "error, embedding.size NG" << std::endl;
                 return ret;
@@ -208,7 +248,8 @@ public:
         return ret;
     }
 
-    std::string getTableList(std::string  prefix ,std::string vec_str, int limit) {
+    std::string getTableList(std::vector<EmbedData> items ,std::string vec_str, int limit) 
+    {
         std::string ret = "";
         try {
             json j1 = json::parse(vec_str);
@@ -216,7 +257,6 @@ public:
             auto embedding = j1;
             int vlen = sizeof(embedding) / sizeof(embedding[0]);
             std::cout << "embedding.vlen=" << embedding.size() << std::endl;            
-            auto items = get_scan_items(prefix, MAX_SCAN_COUNT);
             std::cout << "items.size=" << items.size() << std::endl;
 
             std::vector<ResultEmbed> result_items;
