@@ -49,13 +49,13 @@ int main() {
         try{
             // 2. JSONデコード (req.body をパース)
             json j = json::parse(req.body);
-            std::cout << "body=" << req.body << "\n";
+            //std::cout << "body=" << req.body << "\n";
 
             // 3. データの取り出し (例: {"name": "Gopher", "id": 123})
             std::string prefix = j.at("prefix").get<std::string>();
             std::cout << "prefix=" << prefix << "\n";
             std::string content = j.at("content").get<std::string>();
-            std::cout << "content=" << content << "\n";
+            //std::cout << "content=" << content << "\n";
             std::vector<float> vector = j.at("vector").get<std::vector<float>>();
             std::cout << "vector.size=" << vector.size() << "\n";
             if( prefix.empty()){
@@ -65,7 +65,8 @@ int main() {
             }            
             //validate
             DocumetDb dLib("");
-            auto items = dLib.get_all_json(prefix);            
+            auto items = dLib.get_add_list(prefix);       
+            std::cout << "get_add_list.items.size=" << items.size() << "\n";     
             bool ok = dLib.valid_vector_len(items, vector);            
             if( ok == false){
                 res.status = 400;
