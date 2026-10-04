@@ -1,6 +1,6 @@
 # cpp_redis_api_vec1
 
- Version: 0.9.1
+ Version: 0.9.2
 
  date    : 2026/09/27
  
@@ -59,7 +59,7 @@ make all
 ```
 curl -X POST http://localhost:8888/api/insert \
   -H "Content-Type: application/json" \
-  -d '{"prefix": "doc:" , "content": "hello", "vector": "[0.01 , 0.03, 0.04]"}'
+  -d '{"prefix": "doc:" , "content": "hello", "vector": [0.01 , 0.03, 0.04]}'
 ```
 
 ***
@@ -71,7 +71,7 @@ curl -X POST http://localhost:8888/api/insert \
 ```
 curl -X POST http://localhost:8888/api/select \
   -H "Content-Type: application/json" \
-  -d '{"prefix": "doc:" , "limit": 3 ,"vector": "[0.02 , 0.03, 0.14]"}'
+  -d '{"prefix": "doc:" , "limit": 3 ,"vector": [0.02 , 0.03, 0.14]}'
 ```
 
 * vector delete
@@ -96,6 +96,12 @@ g++ -std=c++17 delete_doc.cpp -o delete_doc -lhiredis
 ```
 ./delete_doc doc1:
 ```
+
+***
+### version
+
+* VER_0_9_2: fix, vertor Search 
+* VER_0_9_1: new 
 
 ***
 ### blog

@@ -6,8 +6,6 @@
 
 using json = nlohmann::json;
 
-long MAX_SCAN_COUNT = 1000000; 
-
 class DocumetDb {
 private:
     redisContext* ctx;
@@ -35,6 +33,118 @@ public:
 
     void free_ctx(){
         if (ctx) redisFree(ctx);
+    }
+
+    std::vector<EmbedData> get_all_json(std::string prefix)
+    {
+      std::vector<EmbedData> ret;
+      std::string retBuff = "[";
+      // SCAN開始
+      std::string cursor = "0";
+      std::string match_str = prefix + "*";
+      long row_count = 0;
+
+      do
+      {
+          redisReply* reply = static_cast<redisReply*>(
+              redisCommand(
+                  ctx,
+                  "SCAN %s MATCH %s COUNT 100",
+                  cursor.c_str(),
+                  match_str.c_str()
+              )
+          );
+
+          if (reply == nullptr)
+          {
+              std::cerr << "SCAN command failed" << std::endl;
+              break;
+          }
+
+          if (reply->type != REDIS_REPLY_ARRAY ||
+              reply->elements != 2)
+          {
+              std::cerr << "Invalid SCAN response" << std::endl;
+              freeReplyObject(reply);
+              break;
+          }
+
+          // 次のcursor
+          redisReply* cursorReply = reply->element[0];
+
+          cursor = cursorReply->str;
+
+          // KEY一覧
+          redisReply* keysReply = reply->element[1];
+
+          for (size_t i = 0; i < keysReply->elements; i++)
+          {
+              redisReply* keyReply = keysReply->element[i];
+
+              std::string key = keyReply->str;
+
+              // VALUE取得
+              redisReply* valueReply = static_cast<redisReply*>(
+                  redisCommand(
+                      ctx,
+                      "GET %s",
+                      key.c_str()
+                  )
+              );
+
+              if (valueReply == nullptr)
+              {
+                  std::cerr << "GET failed: " << key << std::endl;
+                  continue;
+              }
+              //std::cout << "KEY   : " << key << std::endl;
+
+              if (valueReply->type == REDIS_REPLY_STRING)
+              {
+                  if(row_count > 0){
+                    retBuff += ",";
+                  }
+                  row_count += 1;
+
+                  //std::cout << "VALUE : "
+                  //          << valueReply->str
+                  //          << std::endl;
+                  std::string j1_str = valueReply->str;
+                  retBuff += j1_str;
+              }
+              else if (valueReply->type == REDIS_REPLY_NIL)
+              {
+                  std::cout << "VALUE : (nil)" << std::endl;
+              }
+              else
+              {
+                  std::cout << "VALUE : unsupported type"
+                            << std::endl;
+              }
+
+              freeReplyObject(valueReply);
+          }
+
+          freeReplyObject(reply);
+
+      } while (cursor != "0");
+      retBuff += "]";
+      //std::cout << "retBuff=" << retBuff << std::endl;
+      json j1 = json::parse(retBuff);
+      std::cout << "j1.size=" << j1.size() << std::endl;
+      std::vector<EmbedData> scanItems;
+      for(long i=0; i < j1.size(); i++) {
+        std::string id = j1[i].at("id").get<std::string>();                  
+        std::string content = j1[i].at("content").get<std::string>();
+        std::vector<float> vector = j1[i].at("vector").get<std::vector<float>>(); 
+        EmbedData row;      
+        row.embedding    = vector;                  
+        row.id = id;
+        row.content = content;        
+        scanItems.push_back(row);
+      }
+      ret = scanItems;
+      return ret;
     }
 
     std::vector<EmbedData> get_scan_items(std::string prefix, long max_count)
@@ -113,13 +223,6 @@ public:
                   std::string vector = j1.at("vector").get<std::string>();                  
                   json j2 = json::parse(vector);
                   //std::cout << "j2.size=" << j2.size() << std::endl;
-                  /*
-                  std::vector<float> vecFloat;
-                  for(int i=0; i < j2.size(); i++) {
-                    auto f1 = j2[i].get<float>();
-                    vecFloat.push_back(f1);
-                  }            
-                  */
                   std::vector<float> rowVec;
                   EmbedData row;      
                   row.embedding    = j2.get<std::vector<float>>();                  
@@ -171,15 +274,10 @@ public:
         return dot / (std::sqrt(norm1Sq) * std::sqrt(norm2Sq));
     }    
 
-    bool valid_vector_len(std::vector<EmbedData> items, std::string vec_str) {
+    bool valid_vector_len(std::vector<EmbedData> items, std::vector<float> embedding) {
         bool ret = false;
         try {
-            json j1 = json::parse(vec_str);
-            std::cout << "size: " << j1.size() << '\n';
-            auto embedding = j1;
-            //int vlen = sizeof(embedding) / sizeof(embedding[0]);
             std::cout << "embedding.vlen=" << embedding.size() << std::endl;            
-            //auto items = get_scan_items(prefix, 5);
             std::cout << "items.size=" << items.size() << std::endl;
             if(items.size() == 0){
                 return true;
@@ -215,27 +313,10 @@ public:
                 return true;
             }
 
-            //std::vector<ResultEmbed> result_items;
             int one_vec_size = 0;
             auto target = items[0];
             one_vec_size = target.embedding.size();
             std::cout << "one_vec_size=" << one_vec_size << std::endl;
-            /*
-            for (const auto& data : items) {
-                std::string id = data.id;
-                std::vector<float> vec = data.embedding;
-
-                ResultEmbed res_item;
-                res_item.id = id;
-                res_item.embedding = vec;
-                res_item.content = data.content;
-                if(result_items.size() == 0){
-                    one_vec_size = vec.size();
-                    std::cout << "one_vec_size=" << one_vec_size << std::endl;
-                    result_items.push_back(res_item); 
-                }
-            }
-            */
             if(embedding.size() != one_vec_size){
                 std::cout << "error, embedding.size NG" << std::endl;
                 return ret;
@@ -248,14 +329,10 @@ public:
         return ret;
     }
 
-    std::string getTableList(std::vector<EmbedData> items ,std::string vec_str, int limit) 
+    std::string getTableList(std::vector<EmbedData> items ,std::vector<float> embedding , int limit) 
     {
         std::string ret = "";
         try {
-            json j1 = json::parse(vec_str);
-            std::cout << "size: " << j1.size() << '\n';
-            auto embedding = j1;
-            int vlen = sizeof(embedding) / sizeof(embedding[0]);
             std::cout << "embedding.vlen=" << embedding.size() << std::endl;            
             std::cout << "items.size=" << items.size() << std::endl;
 
@@ -351,7 +428,7 @@ public:
     }
 
     void vector_add(
-      const std::string& prefix , const std::string& content, std::string embedding
+      const std::string& prefix , const std::string& content, std::vector<float> embedding
     ){
       try{  
 
@@ -360,7 +437,7 @@ public:
         json data = {
             {"id", new_id.c_str() },
             {"content", content.c_str() },
-            {"vector", embedding.c_str() }
+            {"vector", embedding }
         };
 
         std::string jsonText = data.dump();
